@@ -1,0 +1,4 @@
+-Q ../theories Printf
+-R . Printf
+
+demo.v
