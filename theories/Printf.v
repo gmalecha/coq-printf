@@ -19,34 +19,29 @@ with hole (fmt : string) : Type :=
   | String x fmt => holes fmt
   end.
 
-
-Local Fixpoint printf' (acc : string -> string) (fmt : string) {struct fmt}
+Local Fixpoint sprintf' (acc : string -> string) (fmt : string) {struct fmt}
 : holes fmt :=
   match fmt as fmt return holes fmt with
   | EmptyString => acc EmptyString
   | String "%" fmt =>
     print_val acc fmt
   | String a fmt =>
-    printf' (fun x => acc (String a x)) fmt
+    sprintf' (fun x => acc (String a x)) fmt
   end
 with print_val (acc : string -> string) (fmt : string) {struct fmt}
 : hole fmt :=
   match fmt as fmt return hole fmt with
   | EmptyString => acc EmptyString
   | String "s" fmt => fun s =>
-    printf' (fun x => acc (String.append s x)) fmt
+    sprintf' (fun x => acc (String.append s x)) fmt
   | String "d" fmt => fun n =>
-    printf' (fun x => acc (String.append (to_string n) x)) fmt
+    sprintf' (fun x => acc (String.append (to_string n) x)) fmt
   | String "c" fmt => fun c =>
-    printf' (fun x => acc (String c x)) fmt
+    sprintf' (fun x => acc (String c x)) fmt
   | String "%" fmt =>
-    printf' (fun x => acc (String "%" x)) fmt
+    sprintf' (fun x => acc (String "%" x)) fmt
   | String a fmt =>
-    printf' (fun x => acc (String a x)) fmt
+    sprintf' (fun x => acc (String a x)) fmt
   end.
 
-Definition printf := printf' (fun x => x).
-
-Local Open Scope string_scope.
-
-Compute printf "%d %s %c" 5 "hello" "b"%char.
+Definition sprintf := sprintf' (fun x => x).
