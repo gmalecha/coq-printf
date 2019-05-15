@@ -3,124 +3,14 @@ Require Import Coq.Strings.String.
 Require Import Coq.Init.Nat.
 Require Import Coq.Arith.PeanoNat.
 Require Import Printf.Justify.
-(* Require Import Coq.omega.Omega. *)
-
+Require Import Printf.Flags.
 Require Import Coq.Program.Wf.
-Inductive justify : Set := LeftJustify | RightJustify.
-(*
- reference :
- http://www.cplusplus.com/reference/cstdio/printf/  *)
-(* %[flags]     [width]  specifier  *)
-(* %(-|+| |#|0)^* (\d+)    specifier  *)
-Record options := { option_justify : justify ;        (* '-'   : left justify                   x *)
-                          option_sign : bool ;        (* '+'   : precede with plus sign         x *)
-                          option_space : bool ;       (* ' '   : space if no sign displayed     x *)
-                          option_prefix : bool ;      (* '#'   : precede with o x X , 0 0x 0X
-                                                                 for values different than zero x *)
-                          option_zero_pad : bool ;    (* '0'   : padd with 0's instead of space x *)
-                          option_width : option nat ; (* (\d+) : width of field                 x *)
-                        }.
+Require Import Coq.Program.Basics.
 
+Set Primitive Projections.
 
-
-(* default options *)
-Definition default_options : options := {| option_justify :=  RightJustify ;
-                                           option_sign := false;
-                                           option_space := false;
-                                           option_prefix := false;
-                                           option_zero_pad := false;
-                                           option_width := None;
-                                        |}.
-Definition update_option_justify o v :=
-  {| option_justify := v ;
-     option_sign := option_sign o ;
-     option_space := option_space o ;
-     option_prefix := option_prefix o ;
-     option_zero_pad := option_zero_pad o;
-     option_width := option_width o;
-  |}.
-
-Definition update_option_sign o v :=
-  {| option_justify := option_justify o ;
-     option_sign := v ;
-     option_space := option_space o ;
-     option_prefix := option_prefix o ;
-     option_zero_pad := option_zero_pad o;
-     option_width := option_width o;
-  |}.
-
-Definition update_option_space o v :=
-  {| option_justify := option_justify o ;
-     option_sign := option_sign o ;
-     option_space := v ;
-     option_prefix := option_prefix o ;
-     option_zero_pad := option_zero_pad o;
-     option_width := option_width o;
-  |}.
-
-Definition update_option_prefix o v :=
-  {| option_justify := option_justify o ;
-     option_sign := option_sign o ;
-     option_space := option_space o ;
-     option_prefix := v ;
-     option_zero_pad := option_zero_pad o;
-     option_width := option_width o;
-  |}.
-
-Definition update_option_zero_pad o v :=
-  {| option_justify := option_justify o ;
-     option_sign := option_sign o ;
-     option_space := option_space o ;
-     option_prefix := option_prefix o ;
-     option_zero_pad := v;
-    option_width := option_width o;
-  |}.
-
-Definition update_option_width' o width' :=
-  {| option_justify := option_justify o ;
-     option_sign := option_sign o ;
-     option_space := option_space o ;
-     option_prefix := option_prefix o ;
-     option_zero_pad := option_zero_pad o;
-     option_width := width'
-  |}.
-
-Definition update_option_width o width :=
-  update_option_width'
-    o
-    (match option_width o with
-     | None => Some width
-     | Some width' => Some ((10 * width') + width)
-     end).
-
-
-Theorem option_identity :
-  forall o justify sign space prefix zero_pad width ,
-         (update_option_width'
-         (update_option_zero_pad
-         (update_option_prefix
-         (update_option_space
-         (update_option_sign
-         (update_option_justify o justify)
-         sign)
-         space)
-         prefix)
-         zero_pad)
-         width) =
-         {| option_justify := justify ;
-            option_sign := sign ;
-            option_space := space ;
-            option_prefix := prefix ;
-            option_zero_pad := zero_pad ;
-            option_width := width
-         |}.
-intros.
-unfold update_option_width'.
-reflexivity.
-Qed.
-
-(* justify *)
-Definition justify_string (s : string) (o : options) : string :=
+(* Justify *)
+Definition justify_string (o : options) (s : string) : string :=
   let a := if option_zero_pad o then "0"%char else " "%char in
   match option_width o with
   | None => s
@@ -131,7 +21,7 @@ Definition justify_string (s : string) (o : options) : string :=
     end
   end.
 (* sign *)
-Definition sign_string (s : string) (o : options) : string :=
+Definition sign_string (o : options) (s : string) : string :=
   match(option_sign o,option_space o) with
   | (true,_) => String "+" s
   | (_,true) => String " " s
@@ -139,17 +29,14 @@ Definition sign_string (s : string) (o : options) : string :=
   end.
 
 (* prefix *)
-Definition prefix_string (prefix : string) (n : nat) (s : string) (o : options) : string :=
+Definition prefix_string (o : options) (prefix : string) (n : nat) (s : string) : string :=
   match n with
   | 0 => s
-  | S _ =>
-  if option_prefix o then
-    append prefix s
-  else
-    s
+  | S _ => if option_prefix o then
+             append prefix s
+           else
+             s
   end.
-
-
 
 Fixpoint binary_ascii (n : nat) : ascii :=
   match n with
@@ -173,7 +60,7 @@ Fixpoint decimal_ascii (n : nat) : ascii :=
   match n with
   | 8 =>  "8"%char
   | 9 =>  "9"%char
-  | _  => octal_ascii n
+  | _ => octal_ascii n
   end.
 
 Fixpoint hex_ascii (n : nat) : ascii :=
@@ -198,7 +85,6 @@ Fixpoint hex_ascii_upper (n : nat) : ascii :=
   | _  => decimal_ascii n
   end.
 Check hex_ascii.
-
 
 Program Fixpoint nat_to_string
          (base : nat | 1 < base)
@@ -312,36 +198,39 @@ with width (fmt : string) : Type :=
   end.
 
 (* helper methods to format *)
-Definition format_s (s : string) (o : options) (x : string) : string :=
-  let text := justify_string s o in
+Definition format_s
+           (o : options)
+           (s : string)
+           (x : string) : string :=
+  let text := justify_string o s in
   (String.append text x).
 
-Definition format_b (n : nat) (o : options) (x : string) : string :=
-  let text := justify_string (binary_string n) o in
-  (String.append text x).
+Definition format_nat
+           (f : nat -> string)
+           (prefix : option string)
+           (o : options)
+           (n : nat) : string -> string :=
+  let text := f n in
+  let text := match prefix with
+              | Some prefix' => prefix_string o prefix' n text
+              | None => text
+              end in
+  format_s o text.
 
-Definition format_o (n : nat) (o : options) (x : string) : string :=
-  let text := octal_string n in
-  let text := prefix_string "0"%string n text o in
-  let text := justify_string text o in
-  (String.append text x).
+Definition format_b : options -> nat -> string -> string :=
+  format_nat binary_string None.
 
-Definition format_d (n : nat) (o : options) (x : string) : string :=
-  let text := justify_string (sign_string (decimal_string n) o) o in
-  (String.append text x).
+Definition format_o : options -> nat -> string -> string :=
+  format_nat octal_string (Some "0"%string).
 
-Definition format_x (n : nat) (o : options) (x : string) : string :=
-  let text := hex_string n in
-  let text := prefix_string "0x"%string n text o in
-  let text := justify_string text o in
-  (String.append text x).
+Definition format_d (o : options) : nat -> string -> string :=
+  format_nat (fun (n : nat) => sign_string o (decimal_string n)) None o.
 
-Definition format_X (n : nat) (o : options) (x : string) : string :=
-  let text := hex_string_upper n in
-  let text := prefix_string "0X"%string n text o in
-  let text := justify_string text o in
-  (String.append text x).
+Definition format_x : options -> nat -> string -> string :=
+  format_nat hex_string (Some "0x"%string).
 
+Definition format_X : options -> nat -> string -> string :=
+  format_nat hex_string_upper (Some "0X"%string).
 
 Local Fixpoint sprintf' (acc : string -> string) (fmt : string) {struct fmt} : holes fmt :=
   match fmt as fmt return holes fmt with
@@ -351,20 +240,20 @@ Local Fixpoint sprintf' (acc : string -> string) (fmt : string) {struct fmt} : h
   | String a fmt =>
     sprintf' (fun x => acc (String a x)) fmt
   end
-      with print_val
-           (o : options)
-           (acc : string -> string)
-           (fmt : string) {struct fmt} : hole fmt :=
+with print_val
+     (o : options)
+     (acc : string -> string)
+     (fmt : string) {struct fmt} : hole fmt :=
     match fmt as fmt return hole fmt with
     | EmptyString => acc EmptyString
-    | String "s" fmt => fun s => sprintf' (fun x => acc (format_s s o x)) fmt
-    | String "b" fmt => fun n => sprintf' (fun x => acc (format_b n o x)) fmt
-    | String "o" fmt => fun n => sprintf' (fun x => acc (format_o n o x)) fmt
-    | String "d" fmt => fun n => sprintf' (fun x => acc (format_d n o x)) fmt
-    | String "x" fmt => fun n => sprintf' (fun x => acc (format_x n o x)) fmt
-    | String "X" fmt => fun n => sprintf' (fun x => acc (format_X n o x)) fmt
-    | String "c" fmt => fun c => sprintf' (fun x => acc (String c x)) fmt
-    | String "%" fmt =>          sprintf' (fun x => acc (String "%" x)) fmt
+    | String "s" fmt => fun s => sprintf' (compose acc (format_s o s)) fmt
+    | String "b" fmt => fun n => sprintf' (compose acc (format_b o n)) fmt
+    | String "o" fmt => fun n => sprintf' (compose acc (format_o o n)) fmt
+    | String "d" fmt => fun n => sprintf' (compose acc (format_d o n)) fmt
+    | String "x" fmt => fun n => sprintf' (compose acc (format_x o n)) fmt
+    | String "X" fmt => fun n => sprintf' (compose acc (format_X o n)) fmt
+    | String "c" fmt => fun c => sprintf' (compose acc (String c)) fmt
+    | String "%" fmt =>          sprintf' (compose acc (String "%")) fmt
     | String "-" fmt => print_val (update_option_justify o LeftJustify) acc fmt
     | String "+" fmt => print_val (update_option_sign o true) acc fmt
     | String " " fmt => print_val (update_option_space o true) acc fmt
@@ -380,20 +269,21 @@ Local Fixpoint sprintf' (acc : string -> string) (fmt : string) {struct fmt} : h
     | String "8" fmt => width_val (update_option_width o 8) acc fmt
     | String "9" fmt => width_val (update_option_width o 9) acc fmt
     | String a   fmt =>          sprintf' (fun x => acc (String a x)) fmt
-    end with width_val
-             (o : options)
-             (acc : string -> string)
-             (fmt : string) {struct fmt} : width fmt :=
+    end
+with width_val
+     (o : options)
+     (acc : string -> string)
+     (fmt : string) {struct fmt} : width fmt :=
       match fmt as fmt return width fmt with
       | EmptyString => acc EmptyString
-      | String "s" fmt => fun s => sprintf' (fun x => acc (format_s s o x)) fmt
-      | String "b" fmt => fun n => sprintf' (fun x => acc (format_b n o x)) fmt
-      | String "o" fmt => fun n => sprintf' (fun x => acc (format_o n o x)) fmt
-      | String "d" fmt => fun n => sprintf' (fun x => acc (format_d n o x)) fmt
-      | String "x" fmt => fun n => sprintf' (fun x => acc (format_x n o x)) fmt
-      | String "X" fmt => fun n => sprintf' (fun x => acc (format_X n o x)) fmt
-      | String "c" fmt => fun c => sprintf' (fun x => acc (String c x)) fmt
-      | String "%" fmt =>          sprintf' (fun x => acc (String "%" x)) fmt
+      | String "s" fmt => fun s => sprintf' (compose acc (format_s o s)) fmt
+      | String "b" fmt => fun n => sprintf' (compose acc (format_b o n)) fmt
+      | String "o" fmt => fun n => sprintf' (compose acc (format_o o n)) fmt
+      | String "d" fmt => fun n => sprintf' (compose acc (format_d o n)) fmt
+      | String "x" fmt => fun n => sprintf' (compose acc (format_x o n)) fmt
+      | String "X" fmt => fun n => sprintf' (compose acc (format_X o n)) fmt
+      | String "c" fmt => fun c => sprintf' (compose acc (String c)) fmt
+      | String "%" fmt =>          sprintf' (compose acc (String "%")) fmt
       | String "0" fmt => width_val (update_option_width o 0) acc fmt
       | String "1" fmt => width_val (update_option_width o 1) acc fmt
       | String "2" fmt => width_val (update_option_width o 2) acc fmt
@@ -407,5 +297,4 @@ Local Fixpoint sprintf' (acc : string -> string) (fmt : string) {struct fmt} : h
       | String a   fmt => sprintf' (fun x => acc (String a x)) fmt
       end.
 
-
-Definition sprintf := sprintf' (fun x => x).
+Definition sprintf := sprintf' id.

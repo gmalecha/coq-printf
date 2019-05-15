@@ -1,4 +1,4 @@
-(* This impelementation was a helpful reference
+(* This implementation was a helpful reference
    https://gist.github.com/rntz/aaaaf7a0bdb1cc65c49adb6adde29728
 *)
 Require Import Coq.Strings.Ascii.
@@ -17,6 +17,7 @@ Fixpoint drop (n : nat) (s : string) :=
   end.
 
 Theorem drop_spec : forall l r , drop (length l) (l ++r ) = r.
+Proof.
   intros.
   induction l.
   reflexivity.
@@ -35,6 +36,7 @@ Fixpoint take (n : nat) (s : string):=
   end.
 
 Theorem take_spec : forall l r , take (length l) (l ++r ) = l.
+Proof.
   intros.
   induction l.
   reflexivity.
@@ -57,7 +59,8 @@ Fixpoint string_uniform (a : ascii) (s : string) : Prop :=
   | String h t => (h = a) /\ string_uniform a t
   end.
 
-Lemma replicate_uniform : forall a n , string_uniform a (replicate a n).
+Theorem replicate_uniform : forall a n , string_uniform a (replicate a n).
+Proof.
   intros.
   induction n.
   simpl.
@@ -69,7 +72,8 @@ Lemma replicate_uniform : forall a n , string_uniform a (replicate a n).
 Qed.
 
 
-Lemma replicate_length : forall a n , length (replicate a n) = n.
+Theorem replicate_length : forall a n , length (replicate a n) = n.
+Proof.
   induction n.
   reflexivity.
   simpl.
@@ -85,12 +89,14 @@ Definition left_justify_string
            (n : nat)
            (s : string) : string := s ++ (replicate a (n - (length s))).
 
-Theorem length_sn : forall s a , length (String a s) = S(length s).
+Theorem length_sn : forall s a , S(length s) = length (String a s).
+Proof.
   reflexivity.
 Qed.
 
 Theorem left_justify_padding' : forall (a : ascii) (n : nat) (s : string) ,
-  drop (length s) (left_justify_string a n s) = replicate a (n - (length s)).
+    drop (length s) (left_justify_string a n s) = replicate a (n - (length s)).
+Proof.
   intros.
   induction s.
   simpl.
@@ -99,9 +105,9 @@ Theorem left_justify_padding' : forall (a : ascii) (n : nat) (s : string) ,
   simpl.
   rewrite <- Minus.minus_n_O.
   reflexivity.
-  rewrite -> length_sn.
+  simpl.
   unfold left_justify_string.
-  rewrite -> length_sn.
+  simpl.
   simpl.
   assert (Ha' := drop_spec s (replicate a (n - S (length s)))).
   apply Ha'.
@@ -109,12 +115,14 @@ Qed.
 
 Theorem left_justify_padding : forall (a : ascii) (n : nat) (s : string) ,
     string_uniform a (drop (length s) (left_justify_string a n s)).
+Proof.
   intros.
   rewrite -> left_justify_padding'.
   apply replicate_uniform.
 Qed.
 
 Theorem distribute_length : forall l r , length (l ++ r ) = length l + (length r).
+Proof.
   intros.
   induction l.
   simpl.
@@ -125,6 +133,7 @@ Theorem distribute_length : forall l r , length (l ++ r ) = length l + (length r
 Qed.
 
 Theorem alternate_max : forall n m , max n m = n + (m - n).
+Proof.
   intros n.
   induction n as [| n IHn] ; intros m.
   simpl. apply Minus.minus_n_O.
@@ -141,11 +150,10 @@ Theorem alternate_max : forall n m , max n m = n + (m - n).
   apply IHn.
 Qed.
 
-
-
 Theorem left_justify_length :
         forall (a : ascii) (n : nat) (s : string) ,
           length (left_justify_string a n s) = max (length s) n.
+Proof.
   intros.
   rewrite -> alternate_max.
   intros.
@@ -163,20 +171,24 @@ Qed.
 
 Theorem lemma_replicate : forall a n s ,
     take (S n) (String a s) = String a (take n s).
+Proof.
   intros.
   reflexivity.
 Qed.
 
 Theorem string_associative : forall a s t ,
     append (String a s) t = String a (append s t).
+Proof.
   reflexivity.
   Qed.
+
 Theorem take_replicate : forall a n s ,
     take (length s) (s ++ (replicate a n)) = s.
+Proof.
   intros.
   induction s.
   reflexivity.
-  rewrite length_sn.
+  rewrite <- length_sn.
   rewrite -> string_associative.
   rewrite -> lemma_replicate .
   rewrite -> IHs.
@@ -186,6 +198,7 @@ Qed.
 Theorem left_padding :
   forall (n : nat) (a : ascii) (s : string) ,
     take (length s) (left_justify_string a n s) = s.
+Proof.
  intros.
  induction s.
  reflexivity.
@@ -200,17 +213,18 @@ Definition right_justify_string
            (n : nat)
            (s : string) : string := (replicate a (n - (length s))) ++ s.
 
-
 Theorem drop_replicate : forall a n s , drop n ((replicate a n)  ++ s) = s.
+Proof.
   intros.
   induction n.
   reflexivity.
   simpl.
   apply IHn.
-  Qed.
+Qed.
 
 Theorem right_justify_padding' : forall (a : ascii) (n : nat) (s : string) ,
-  take (n - (length s)) (right_justify_string a n s) = replicate a (n - (length s)).
+    take (n - (length s)) (right_justify_string a n s) = replicate a (n - (length s)).
+Proof.
   intros.
   assert (Ha' := take_spec (replicate a (n - (length s))) s).
   rewrite  replicate_length in Ha'.
@@ -220,16 +234,17 @@ Theorem right_justify_padding' : forall (a : ascii) (n : nat) (s : string) ,
 Qed.
 
 Theorem right_justify_padding : forall (a : ascii) (n : nat) (s : string) ,
-  string_uniform a (take (n - (length s)) (right_justify_string a n s)).
+    string_uniform a (take (n - (length s)) (right_justify_string a n s)).
+Proof.
   intros.
   rewrite -> right_justify_padding'.
   apply replicate_uniform.
 Qed.
 
-
 Theorem right_padding :
   forall (n : nat) (a : ascii) (s : string) ,
     drop (n - (length s)) (right_justify_string a n s) = s.
+Proof.
  intros.
  induction s.
  simpl.
@@ -246,6 +261,7 @@ Qed.
 Theorem right_justify_length :
         forall (a : ascii) (n : nat) (s : string) ,
           length (right_justify_string a n s) = max (length s) n.
+Proof.
   intros.
   rewrite -> alternate_max.
   destruct s.
