@@ -1,3 +1,5 @@
 -Q theories Printf
 
+theories/Flags.v
+theories/Justify.v
 theories/Printf.v
