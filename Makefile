@@ -4,6 +4,9 @@ all: Makefile.coq
 test: all
 	$(MAKE) -C test-suite
 
+install: all
+	$(MAKE) -f Makefile.coq install
+
 Makefile.coq: _CoqProject
 	coq_makefile -f _CoqProject -o Makefile.coq
 
