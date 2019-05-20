@@ -20,9 +20,7 @@ Structure
 | '+'   | precede with a plus sign (only applies to nat)                              |
 | ' '   | space if no sign precedes                                                   |
 | '#'   | with specifier o x X precede with 0 0x 0X for for values different than zero |
-
-
-'0' pad with 0's instead of space
+| '0'   | pad with 0's instead of space                                                |
 
 ## specifier
 
