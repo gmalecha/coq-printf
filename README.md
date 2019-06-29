@@ -1,41 +1,45 @@
 # cop-printf
 
-Implementation of sprintf for Coq
+Implementation of `sprintf` for Coq
 
-## format specifiers
+## Format specifiers
 
-Regexp
+The syntax of format specifiers is given by this regexp:
 
+```
 %(-|+| |#|0)^* (\d+) (s|b|o|d|x|X|c)
+```
 
-Structure
+which corresponds to this structure:
 
+```
 %[flags]       [width]  specifier
+```
 
-## flags
+## Flags
 
-| flags | description                                                                 |
+| Flags | Description                                                                 |
 |-------|-----------------------------------------------------------------------------|
-| '-'   | left justify                                                                |
-| '+'   | precede with a plus sign (only applies to nat)                              |
-| ' '   | space if no sign precedes                                                   |
-| '#'   | with specifier o x X precede with 0 0x 0X for for values different than zero |
-| '0'   | pad with 0's instead of space                                                |
+| `-`   | Left justify                                                                |
+| `+`   | Precede with a plus sign (only applies to `nat`)                            |
+| *(space)* | Space if no sign precedes                                               |
+| `#`   | With specifier `o`, `x`, `X`, precede with `0`, `0x`, `0X` respectively for values different than zero |
+| `0`   | Pad with 0's instead of space                                               |
 
-## specifier
+## Specifiers
 
-| specifier | description            |
+| Specifier | Description            |
 |-----------|------------------------|
-| 's'       | string                 |
-| 'b'       | binary                 |
-| 'o'       | octal                  |
-| 'd'       | decimal                |
-| 'x'       | hexidecimal lower case |
-| 'X'       | hexidecimal upper case |
-| 'c'       | character              |
+| `s`       | string                 |
+| `b`       | binary                 |
+| `o`       | octal                  |
+| `d`       | decimal                |
+| `x`       | hexadecimal lower case |
+| `X`       | hexadecimal upper case |
+| `c`       | character              |
 
 
-## example
+## Example
 
 ```Coq
 Require Import Coq.Strings.String.
@@ -44,6 +48,6 @@ Require Import Printf.Printf.
 Eval compute in (sprintf "%b" 1234).
 ```
 
-## resources
+## Resources
 
-reference : http://www.cplusplus.com/reference/cstdio/printf
+Reference : http://www.cplusplus.com/reference/cstdio/printf
