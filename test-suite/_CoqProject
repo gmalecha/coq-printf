@@ -2,3 +2,5 @@
 -R . Printf
 
 demo.v
+TestPrintf.v
+TestScanf.v
