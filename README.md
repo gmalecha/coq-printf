@@ -7,7 +7,7 @@ Implementation of `sprintf` for Coq
 The syntax of format specifiers is given by this regular expression:
 
 ```
-%(-|+| |#|0)^* (\d+) (s|b|o|d|x|X|c)
+%(-|+| |#|0)^* (\d+) (s|b|o|d|x|X|c|%)
 ```
 
 which corresponds to this structure:
@@ -37,6 +37,7 @@ which corresponds to this structure:
 | `x`       | hexadecimal lower case |
 | `X`       | hexadecimal upper case |
 | `c`       | character              |
+| `%`       | literal `%`            |
 
 
 ## Example
