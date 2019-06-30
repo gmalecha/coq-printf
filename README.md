@@ -4,7 +4,7 @@ Implementation of `sprintf` for Coq
 
 ## Format specifiers
 
-The syntax of format specifiers is given by this regexp:
+The syntax of format specifiers is given by this regular expression:
 
 ```
 %(-|+| |#|0)^* (\d+) (s|b|o|d|x|X|c)
