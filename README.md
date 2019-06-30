@@ -2,6 +2,38 @@
 
 Implementation of `sprintf` and `sscanf` for Coq
 
+## Example
+
+```Coq
+Require Import Coq.Strings.String.
+Require Import Printf.Printf.
+Require Import Printf.Scanf.
+
+Eval compute in (sprintf "%b" 1234).
+(* "10011010010" : string *)
+
+Eval compute in (sscanf "%d %d" (fun n1 n2 s => Some (n1, n2, s)) "12  34  56").
+(* Some (12, 34, "  56") : option (nat * nat * string) *)
+```
+
+## Summary
+
+`sprintf` expects a format string as its first argument, plus one argument
+for every format specifier (`%d`, `%s`, etc.) in that string (there may be
+none), and produces a `string`.
+
+`sscanf` expects a format string as its first argument, a continuation
+as its second argument, and a string to parse as its third argument.
+The continuation takes one argument for every format specifier in the format
+string, plus one more for the remaining string after reaching the end of the
+format string, and produces an `option` result.
+
+```
+sprintf "%d %d" : nat -> nat -> string
+sscanf "%d %d" : (nat -> nat -> string -> option R) -> string -> option R
+(* For any type R *)
+```
+
 ## Format specifiers
 
 The syntax of format specifiers is given by this regular expression:
@@ -55,14 +87,8 @@ type `N` instead of the default `nat`.
 
 The special sequence `%%` encodes a literal `%`.
 
-## Example
-
-```Coq
-Require Import Coq.Strings.String.
-Require Import Printf.Printf.
-
-Eval compute in (sprintf "%b" 1234).
-```
+When used with `scanf`, a whitespace character in a format string will match
+any number of consecutive whitespace characters.
 
 ## Resources
 
