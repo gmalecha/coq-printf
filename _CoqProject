@@ -4,3 +4,4 @@ theories/Flags.v
 theories/Format.v
 theories/Justify.v
 theories/Printf.v
+theories/Scanf.v
