@@ -1,5 +1,7 @@
 Require Import Coq.Strings.Ascii.
 Require Import Coq.Strings.String.
+Require Import Coq.NArith.NArith.
+Require Import Coq.ZArith.ZArith.
 Require Import Printf.Flags.
 
 (** ** Error handling in dependent types *)
@@ -52,7 +54,8 @@ Definition ascii_digit (c : ascii) : nat :=
 
 Module Format.
 
-Variant number_type : Type :=
+(** Encoded number format. *)
+Variant number_enctype : Type :=
 | Binary
 | Octal
 | Decimal
@@ -60,8 +63,16 @@ Variant number_type : Type :=
 | HexUpper
 .
 
+(** Decoded type. *)
+Variant number_dectype : Type :=
+| T_Nat
+| T_N
+.
+
+(** Data type of a specifier. *)
 Variant type : Type :=
-| Number : number_type -> type
+| Number : number_enctype -> number_dectype -> type
+| SDecimal (* Signed decimal number, with type Z *)
 | String
 | Char
 .
@@ -73,11 +84,17 @@ Inductive t : Type :=
 | Hole : type -> options -> t -> t
 .
 
+Local Variant spec_state : Type :=
+| Flags
+| Width
+| TySpec (t : number_dectype)
+.
+
 (** Parser state machine. *)
 Local Variant state : Type :=
-| Ini                                   (* Initial state *)
-| Spec (inWidth : bool) (o : options)  (* Parsing specifier *)
-  (* [inWidth]: [true] if we're in the middle of the width segment *)
+| Ini                                  (* Initial state *)
+| Spec (j : spec_state) (o : options)  (* Parsing specifier *)
+  (* [j]: inner specifier parsing state *)
   (* [o]: currently accumulated options *)
 .
 
@@ -96,40 +113,59 @@ Local Fixpoint parse_ {r : Type} (i : state) (k : t -> r) (s0 : string)
        and keeps the rest as literal. *)
   | Ini, "" => inr (k Empty)
   | Ini, "%" :: "%" :: s => parse_ Ini (fun fmt => k (Literal "%" fmt)) s
-  | Ini, "%" :: s => parse_ (Spec false default_options) k s
+  | Ini, "%" :: s => parse_ (Spec Flags default_options) k s
   | Ini, c :: s => parse_ Ini (fun fmt => k (Literal c fmt)) s
 
   | Spec _ _, "" => inl (ErrorAt i s0)
-  | Spec w o, a :: s =>
+  | Spec j o, a :: s =>
     (* When parsing a specifier, the next character is either:
        - a specifier character, then update the format and go back to the initial state;
        - or a flag (or width) character, then update the options accordingly. *)
     let specifier (t : type) := parse_ Ini (fun fmt => k (Hole t o fmt)) s in
-    let flag (inWidth : bool) (o : options) := parse_ (Spec inWidth o) k s in
-    match a, w with
+    let flag (j : spec_state) (o : options) := parse_ (Spec j o) k s in
+    let typ (t : number_dectype) := parse_ (Spec (TySpec t) o) k s in
+    let number b := Number b
+      match j with
+      | TySpec t => t
+      | _ => T_Nat
+      end in
+    match a, j with
     | "s", _ => specifier String
     | "c", _ => specifier Char
-    | "b", _ => specifier (Number Binary)
-    | "o", _ => specifier (Number Octal)
-    | "d", _ => specifier (Number Decimal)
-    | "x", _ => specifier (Number HexLower)
-    | "X", _ => specifier (Number HexUpper)
-    | "-", false => flag false (update_option_justify o LeftJustify)
-    | "+", false => flag false (update_option_sign o true)
-    | " ", false => flag false (update_option_space o true)
-    | "#", false => flag false (update_option_prefix o true)
-    | "0", false => flag false (update_option_zero_pad o true)
-    | ("1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9"), _
-    | "0", true  => flag true (update_option_width o (ascii_digit a))
+    | "b", _ => specifier (number Binary)
+    | "o", _ => specifier (number Octal)
+    | "d", _ => specifier (number Decimal)
+    | "x", _ => specifier (number HexLower)
+    | "X", _ => specifier (number HexUpper)
+    | "N", _ => typ T_N
+    | "Z", (Flags | Width) =>
+      match s with
+      | "d" :: s => parse_ Ini (fun fmt => k (Hole SDecimal o fmt)) s
+      | _ => inl (ErrorAt i s0)
+      end
+    | "-", Flags => flag Flags (update_option_justify o LeftJustify)
+    | "+", Flags => flag Flags (update_option_sign o true)
+    | " ", Flags => flag Flags (update_option_space o true)
+    | "#", Flags => flag Flags (update_option_prefix o true)
+    | "0", Flags => flag Flags (update_option_zero_pad o true)
+    | ("1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9"), (Flags | Width)
+    | "0", Width  => flag Width (update_option_width o (ascii_digit a))
     | _, _ => inl (ErrorAt i s0)
     end%char
   end%string.
 
 Definition parse : string -> error + t := parse_ Ini id.
 
+Definition dectype_type (t : number_dectype) : Type :=
+  match t with
+  | T_Nat => nat
+  | T_N => N
+  end.
+
 Definition hole_type (ty : type) : Type :=
   match ty with
-  | Number _ => nat
+  | Number _ t => dectype_type t
+  | SDecimal => Z
   | String => string
   | Char => ascii
   end.

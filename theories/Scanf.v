@@ -1,6 +1,7 @@
 Require Import Coq.Strings.Ascii.
 Require Import Coq.Strings.String.
 Require Import Coq.NArith.NArith.
+Require Import Coq.ZArith.ZArith.
 Require Import Printf.Justify.
 Require Import Printf.Flags.
 Require Import Printf.Format.
@@ -13,7 +14,7 @@ Definition fmt_parser (R : Type) (fmt : Format.t) : Type :=
 Definition parser (R A : Type) : Type :=
   (A -> string -> option R) -> string -> option R.
 
-Definition base (ty : Format.number_type) : N :=
+Definition base (ty : Format.number_enctype) : N :=
   match ty with
   | Format.Binary => 2
   | Format.Octal => 8
@@ -82,7 +83,7 @@ Definition hex (c : ascii) : option N :=
   | _ => None
   end.
 
-Definition digit (ty : Format.number_type) : ascii -> option N :=
+Definition digit (ty : Format.number_enctype) : ascii -> option N :=
   match ty with
   | Format.Binary => binary
   | Format.Octal => octal
@@ -215,6 +216,48 @@ Definition parse_string' : nat -> parser R string :=
     | S w => parse_string_ (_parse_string w) k s
     end.
 
+Definition parse_number
+    (b : Format.number_enctype)
+    (t : Format.number_dectype)
+    (o : options)
+  : parser R (Format.dectype_type t)
+  :=
+  fun k s =>
+  let parse :=
+    match option_width o with
+    | None => parse_N
+    | Some w => parse_N' w
+    end
+  in
+  let from_N : N -> Format.dectype_type t :=
+    match t return _ -> _ t with
+    | Format.T_Nat => N.to_nat
+    | Format.T_N => id
+    end in
+  match b, s with
+  | (Format.HexLower | Format.HexUpper), "0" :: ("x" | "X") :: s
+  | _, "+" :: s
+  | _, s
+    => parse (base b) (Read.digit b) (fun n => k (from_N n)) s
+  end.
+
+Definition parse_signed
+    (o : options)
+  : parser R Z
+  :=
+  fun k s =>
+  let parse :=
+    match option_width o with
+    | None => parse_N
+    | Some w => parse_N' w
+    end 10%N Read.decimal
+  in
+  match s with
+  | "-" :: s => parse (fun n => k (Z.opp (Z.of_N n))) s
+  | "+" :: s | s
+    => parse (fun n => k (Z.of_N n)) s
+  end.
+
 Definition parse_hole (ty : Format.type) (o : options)
   : parser R (Format.hole_type ty)
   :=
@@ -225,20 +268,8 @@ Definition parse_hole (ty : Format.type) (o : options)
     | Some w => parse_string' w
     end
   | Format.Char => parse_char
-  | Format.Number b
-    => fun k s =>
-      let parse :=
-        match option_width o with
-        | None => parse_N
-        | Some w => parse_N' w
-        end
-      in
-      match b, s with
-      | (Format.HexLower | Format.HexUpper), "0" :: ("x" | "X") :: s
-      | _, "+" :: s
-      | _, s
-        => parse (base b) (Read.digit b) (fun n => k (N.to_nat n)) s
-      end
+  | Format.Number b t => parse_number b t o
+  | Format.SDecimal => parse_signed o
   end.
 
 Local Fixpoint parse_fmt (fmt : Format.t)

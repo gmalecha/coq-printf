@@ -1,5 +1,7 @@
 Require Import Coq.Strings.Ascii.
 Require Import Coq.Strings.String.
+Require Import Coq.NArith.NArith.
+Require Import Coq.ZArith.ZArith.
 Require Import Printf.Scanf.
 
 Local Open Scope string_scope.
@@ -47,6 +49,36 @@ Proof.
   reflexivity.
 Qed.
 
+Goal sscanf "%Nd" ret "1234" = Some 1234%N.
+Proof.
+  reflexivity.
+Qed.
+
+Goal sscanf "%NX" ret "4D2" = Some 1234%N.
+Proof.
+  reflexivity.
+Qed.
+
+Goal sscanf "%Nx" ret "4d2" = Some 1234%N.
+Proof.
+  reflexivity.
+Qed.
+
+Goal sscanf "%Zd" ret "1234" = Some 1234%Z.
+Proof.
+  reflexivity.
+Qed.
+
+Goal sscanf "%Zd" ret "-1234" = Some (-1234)%Z.
+Proof.
+  reflexivity.
+Qed.
+
+Goal sscanf "%Zd" ret "+1234" = Some 1234%Z.
+Proof.
+  reflexivity.
+Qed.
+
 Goal sscanf "%o, %x, %X, %b, ..."
             (fun a b c d _ => Some (a, b, c, d))
             "2322, 4d2, 4D2, 10011010010, ..."
@@ -76,6 +108,11 @@ Proof.
 Qed.
 
 Goal sscanf "%x" ret "0x4d2" = Some 1234.
+Proof.
+  reflexivity.
+Qed.
+
+Goal sscanf "%Zd" ret "-32" = Some (-32)%Z.
 Proof.
   reflexivity.
 Qed.
