@@ -8,6 +8,8 @@ Require Import Printf.Format.
 
 Set Primitive Projections.
 
+Local Infix "::" := String : string_scope.
+
 Definition fmt_parser (R : Type) (fmt : Format.t) : Type :=
   Format.holes (string -> option R) fmt -> string -> option R.
 

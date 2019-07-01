@@ -10,6 +10,8 @@ Require Import Printf.Digits.
 
 Set Primitive Projections.
 
+Local Infix "::" := String : string_scope.
+
 (* Justify *)
 Definition justify_string (o : options) (s : string) : string :=
   let a := if option_zero_pad o then "0"%char else " "%char in

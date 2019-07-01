@@ -26,7 +26,7 @@ Definition on_success {E R : Type} {er : E + R} {k : R -> Type} (f : forall r, k
 
 (** ** String utilities *)
 
-Infix "::" := String : string_scope.
+Local Infix "::" := String : string_scope.
 
 Definition ascii_digit (c : ascii) : nat :=
   match c with
