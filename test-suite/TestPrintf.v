@@ -1,28 +1,30 @@
 Require Import Coq.Strings.Ascii.
 Require Import Coq.Strings.String.
+Require Import Coq.NArith.NArith.
+Require Import Coq.ZArith.ZArith.
 Require Import Printf.Printf.
 
 Local Open Scope string_scope.
 
-Example test_hex_1234: (hex_string 1234) = "4d2"%string.
+Example test_hex_1234: (hex_string 1234) = "4d2".
 Proof.
   unfold hex_string.
   reflexivity.
 Qed.
 
-Example test_4: (hex_string 4) = "4"%string.
+Example test_4: (hex_string 4) = "4".
 Proof.
   unfold hex_string.
   reflexivity.
 Qed.
 
-Example test_1234_hex_upper: (hex_string_upper 1234) = "4D2"%string.
+Example test_1234_hex_upper: (hex_string_upper 1234) = "4D2".
 Proof.
   unfold hex_string.
   reflexivity.
 Qed.
 
-Example test_1234_octal: (octal_string 1234) = "2322"%string.
+Example test_1234_octal: (octal_string 1234) = "2322".
 Proof.
   unfold hex_string.
   reflexivity.
@@ -68,6 +70,36 @@ Proof.
   reflexivity.
 Qed.
 
+Goal sprintf "%Nd" 1234%N = "1234".
+Proof.
+  reflexivity.
+Qed.
+
+Goal sprintf "%NX" 1234%N = "4D2".
+Proof.
+  reflexivity.
+Qed.
+
+Goal sprintf "%Nx" 1234%N = "4d2".
+Proof.
+  reflexivity.
+Qed.
+
+Goal sprintf "%Zd" 1234%Z = "1234".
+Proof.
+  reflexivity.
+Qed.
+
+Goal sprintf "%Zd" (-1234)%Z = "-1234".
+Proof.
+  reflexivity.
+Qed.
+
+Goal sprintf "%+Zd" 1234%Z = "+1234".
+Proof.
+  reflexivity.
+Qed.
+
 Goal (sprintf "%o, %x, %X, %b, ..." 1234 1234 1234 1234) = "2322, 4d2, 4D2, 10011010010, ...".
 Proof.
   reflexivity.
@@ -83,38 +115,37 @@ Proof.
   reflexivity.
 Qed.
 
-Goal sprintf "%-4X" 1234 = "4D2 "%string.
+Goal sprintf "%-4X" 1234 = "4D2 ".
 Proof.
   reflexivity.
 Qed.
 
-Goal sprintf "%-05X" 1234 = "4D200"%string.
+Goal sprintf "%-05X" 1234 = "4D200".
 Proof.
   reflexivity.
 Qed.
 
-Goal sprintf "% d" 1234 = " 1234"%string.
+Goal sprintf "% d" 1234 = " 1234".
 Proof.
   reflexivity.
 Qed.
 
-Goal sprintf "%+d" 1234 = "+1234"%string.
+Goal sprintf "%+d" 1234 = "+1234".
 Proof.
   reflexivity.
 Qed.
 
-
-Goal sprintf "%-#05X" 1234 = "0X4D2"%string.
+Goal sprintf "%-#05X" 1234 = "0X4D2".
 Proof.
   reflexivity.
 Qed.
 
-Goal sprintf "%-#05X" 0 = "00000"%string.
+Goal sprintf "%-#05X" 0 = "00000".
 Proof.
   reflexivity.
 Qed.
 
-Goal sprintf "%-#05x" 1234 = "0x4d2"%string.
+Goal sprintf "%-#05x" 1234 = "0x4d2".
 Proof.
   reflexivity.
 Qed.

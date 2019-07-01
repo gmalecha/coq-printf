@@ -1,5 +1,8 @@
 -Q theories Printf
 
 theories/Flags.v
+theories/Digits.v
+theories/Format.v
 theories/Justify.v
 theories/Printf.v
+theories/Scanf.v
