@@ -28,7 +28,7 @@ The continuation takes one argument for every format specifier in the format
 string, plus one more for the remaining string after reaching the end of the
 format string, and produces an `option` result.
 
-```
+```Coq
 sprintf "%d %d" : nat -> nat -> string
 sscanf "%d %d" : (nat -> nat -> string -> option R) -> string -> option R
 (* For any type R *)
