@@ -93,8 +93,7 @@ Definition format_X : options -> N -> string -> string :=
   format_nat hex_string_upper (Some "0X"%string).
 
 Definition format_number (b : Format.number_enctype) (t : Format.number_dectype)
-  : options -> Format.dectype_type t -> string -> string
-  :=
+  : options -> Format.dectype_type t -> string -> string :=
   fun o =>
   let format_ :=
     match b with
@@ -122,8 +121,7 @@ Definition format_Z : options -> Z -> string -> string :=
   end.
 
 Definition format (ty : Format.type)
-  : options -> Format.hole_type ty -> string -> string
-  :=
+  : options -> Format.hole_type ty -> string -> string :=
   match ty return _ -> Format.hole_type ty -> _ with
   | Format.Number b t => format_number b t
   | Format.SDecimal => format_Z
@@ -132,8 +130,7 @@ Definition format (ty : Format.type)
   end.
 
 Local Fixpoint sprintf' (acc : string -> string) (fmt : Format.t)
-  : Format.holes string fmt
-  :=
+  : Format.holes string fmt :=
   match fmt return Format.holes string fmt with
   | Format.Empty => acc ""%string
   | Format.Literal c fmt => sprintf' (fun s => acc (c :: s)%string) fmt

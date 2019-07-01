@@ -97,8 +97,7 @@ Local Fixpoint string_of_digits_
     (digit : N -> ascii)
     (s : string)
     (n : digits)
-  : string
-  :=
+  : string :=
   match n with
   | Zero => s
   | Digit n d => string_of_digits_ digit (String (digit d) s) n

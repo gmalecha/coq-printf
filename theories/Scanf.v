@@ -113,8 +113,7 @@ Local Definition parse_N_ (base : N) (digit : ascii -> option N)
     (continue : option N -> string -> option R)
     (x : option N)
     (s0 : string)
-  : option R
-  :=
+  : option R :=
   match s0 with
   | "" =>
     match x with
@@ -144,8 +143,8 @@ Definition parse_N (base : N) (digit : ascii -> option N) : parser R N := fun k 
 
 (** Parse a number of at most [w] characters. *)
 Definition parse_N' (w : nat) (base : N) (digit : ascii -> option N)
-  : parser R N
-  := fun k =>
+  : parser R N :=
+  fun k =>
   let fix _parse_N (w : nat) (x : option N) (s0 : string) :=
     match w with
     | O =>
@@ -164,8 +163,8 @@ Definition parse_char : parser R ascii := fun k s =>
   end.
 
 Definition parse_this_char (c : ascii)
-  : parser R unit
-  := fun k s =>
+  : parser R unit :=
+  fun k s =>
   match s with
   | "" => None
   | c' :: s =>
@@ -193,8 +192,7 @@ Local Definition parse_string_
     (continue : parser R string)
     (k : string -> string -> option R)
     (s0 : string)
-  : option R
-  :=
+  : option R :=
   match s0 with
   | "" => k "" s0
   | c :: s =>
@@ -220,8 +218,7 @@ Definition parse_number
     (b : Format.number_enctype)
     (t : Format.number_dectype)
     (o : options)
-  : parser R (Format.dectype_type t)
-  :=
+  : parser R (Format.dectype_type t) :=
   fun k s =>
   let parse :=
     match option_width o with
@@ -243,8 +240,7 @@ Definition parse_number
 
 Definition parse_signed
     (o : options)
-  : parser R Z
-  :=
+  : parser R Z :=
   fun k s =>
   let parse :=
     match option_width o with
@@ -259,8 +255,7 @@ Definition parse_signed
   end.
 
 Definition parse_hole (ty : Format.type) (o : options)
-  : parser R (Format.hole_type ty)
-  :=
+  : parser R (Format.hole_type ty) :=
   match ty with
   | Format.String =>
     match option_width o with
@@ -273,8 +268,7 @@ Definition parse_hole (ty : Format.type) (o : options)
   end.
 
 Local Fixpoint parse_fmt (fmt : Format.t)
-  : fmt_parser R fmt
-  :=
+  : fmt_parser R fmt :=
   match fmt with
   | Format.Empty => fun k => k
   | Format.Literal " " fmt => fun k => parse_whitespace (fun _ => parse_fmt fmt k)

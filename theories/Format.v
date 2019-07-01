@@ -18,8 +18,7 @@ Definition for_good {E R : Type} (er : E + R) (k : R -> Type) : Type :=
 
 (** Apply a dependent function to the result of a computation when it is successful. *)
 Definition on_success {E R : Type} {er : E + R} {k : R -> Type} (f : forall r, k r)
-  : for_good er k
-  :=
+  : for_good er k :=
   match er with
   | inl e => Invalid e
   | inr r => f r
@@ -106,8 +105,7 @@ Variant error : Type :=
 (** Parse string [s] in state [i] into a format which is passed to the final
   continuation [k], or return an error. *)
 Local Fixpoint parse_ {r : Type} (i : state) (k : t -> r) (s0 : string)
-  : error + r
-  :=
+  : error + r :=
   match i, s0 with
     (* The initial state looks for ["%"], indicating a specifier,
        and keeps the rest as literal. *)
