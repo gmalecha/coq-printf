@@ -55,14 +55,13 @@ Definition binary_ascii (n : N) : ascii :=
 
 Definition octal_ascii (n : N) : ascii :=
   match n with
-  | 0 =>  "0"%char
-  | 1 =>  "1"%char
   | 2 =>  "2"%char
   | 3 =>  "3"%char
   | 4 =>  "4"%char
   | 5 =>  "5"%char
   | 6 =>  "6"%char
-  | _ =>  "7"%char
+  | 7 =>  "7"%char
+  | _ => binary_ascii n
   end.
 
 Definition decimal_ascii (n : N) : ascii :=
