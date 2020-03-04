@@ -83,14 +83,14 @@ Inductive t : Type :=
 | Hole : type -> options -> t -> t
 .
 
-Local Variant spec_state : Type :=
+Variant spec_state : Type :=
 | Flags
 | Width
 | TySpec (t : number_dectype)
 .
 
 (** Parser state machine. *)
-Local Variant state : Type :=
+Variant state : Type :=
 | Ini                                  (* Initial state *)
 | Spec (j : spec_state) (o : options)  (* Parsing specifier *)
   (* [j]: inner specifier parsing state *)
