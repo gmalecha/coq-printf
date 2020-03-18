@@ -92,4 +92,4 @@ any number of consecutive whitespace characters.
 
 ## Resources
 
-Reference : http://www.cplusplus.com/reference/cstdio/printf
+Reference: http://www.cplusplus.com/reference/cstdio/printf
