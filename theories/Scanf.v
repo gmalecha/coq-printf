@@ -170,7 +170,7 @@ Definition parse_this_char (c : ascii)
   match s with
   | "" => None
   | c' :: s =>
-    if Ascii.eqb c c'
+    if Ascii.ascii_dec c c'
     then k tt s
     else None
   end.
