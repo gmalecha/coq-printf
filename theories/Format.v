@@ -29,25 +29,22 @@ Definition on_success {E R : Type} {er : E + R} {k : R -> Type} (f : forall r, k
 Local Infix "::" := String : string_scope.
 
 Definition ascii_digit (c : ascii) : nat :=
-  match c with
-  | "0" => 0
-  | "1" => 1
-  | "2" => 2
-  | "3" => 3
-  | "4" => 4
-  | "5" => 5
-  | "6" => 6
-  | "7" => 7
-  | "8" => 8
-  | "9" => 9
-  | "a" | "A" => 10
-  | "b" | "B" => 11
-  | "c" | "C" => 12
-  | "d" | "D" => 13
-  | "e" | "E" => 14
-  | "f" | "F" => 15
-  | _ => 0
-  end%char.
+  (if c =? "1" then 1
+  else if c =? "2" then 2
+  else if c =? "3" then 3
+  else if c =? "4" then 4
+  else if c =? "5" then 5
+  else if c =? "6" then 6
+  else if c =? "7" then 6
+  else if c =? "8" then 6
+  else if c =? "9" then 6
+  else if c =? "A" then 10
+  else if c =? "B" then 11
+  else if c =? "C" then 12
+  else if c =? "D" then 13
+  else if c =? "E" then 14
+  else if c =? "F" then 15
+  else 0)%char.
 
 (** ** Format strings *)
 
@@ -102,6 +99,35 @@ Variant error : Type :=
 | ErrorAt (i : state) (s : string)
 .
 
+Definition digit1to9 (c : ascii) : bool :=
+  (c =? "1")%char ||
+  (c =? "2")%char ||
+  (c =? "3")%char ||
+  (c =? "4")%char ||
+  (c =? "5")%char ||
+  (c =? "6")%char ||
+  (c =? "7")%char ||
+  (c =? "8")%char ||
+  (c =? "9")%char.
+
+Definition isFlagsOrWidth (j : _) : bool :=
+  match j with
+  | Flags | Width => true
+  | TySpec _ => false
+  end.
+
+Definition isWidth (j : _) : bool :=
+  match j with
+  | Width => true
+  | Flags | TySpec _ => false
+  end.
+
+Definition isFlags (j : _) : bool :=
+  match j with
+  | Flags => true
+  | Width | TySpec _ => false
+  end.
+
 (** Parse string [s] in state [i] into a format which is passed to the final
   continuation [k], or return an error. *)
 Local Fixpoint parse_ {r : Type} (i : state) (k : t -> r) (s0 : string)
@@ -109,12 +135,20 @@ Local Fixpoint parse_ {r : Type} (i : state) (k : t -> r) (s0 : string)
   match i, s0 with
     (* The initial state looks for ["%"], indicating a specifier,
        and keeps the rest as literal. *)
-  | Ini, "" => inr (k Empty)
-  | Ini, "%" :: "%" :: s => parse_ Ini (fun fmt => k (Literal "%" fmt)) s
-  | Ini, "%" :: s => parse_ (Spec Flags default_options) k s
-  | Ini, c :: s => parse_ Ini (fun fmt => k (Literal c fmt)) s
+  | Ini, ""%string => inr (k Empty)
+  | Ini, c :: s =>
+    if (c =? "%")%char then
+      let continue (_ : unit) := parse_ (Spec Flags default_options) k s in
+      match s with
+      | c' :: s =>
+        if (c' =? "%")%char then parse_ Ini (fun fmt => k (Literal "%" fmt)) s
+        else continue tt
+      | _ => continue tt
+      end
+    else
+      parse_ Ini (fun fmt => k (Literal c fmt)) s
 
-  | Spec _ _, "" => inl (ErrorAt i s0)
+  | Spec _ _, ""%string => inl (ErrorAt i s0)
   | Spec j o, a :: s =>
     (* When parsing a specifier, the next character is either:
        - a specifier character, then update the format and go back to the initial state;
@@ -127,30 +161,34 @@ Local Fixpoint parse_ {r : Type} (i : state) (k : t -> r) (s0 : string)
       | TySpec t => t
       | _ => T_Nat
       end in
-    match a, j with
-    | "s", _ => specifier String
-    | "c", _ => specifier Char
-    | "b", _ => specifier (number Binary)
-    | "o", _ => specifier (number Octal)
-    | "d", _ => specifier (number Decimal)
-    | "x", _ => specifier (number HexLower)
-    | "X", _ => specifier (number HexUpper)
-    | "N", _ => typ T_N
-    | "Z", (Flags | Width) =>
-      match s with
-      | "d" :: s => parse_ Ini (fun fmt => k (Hole SDecimal o fmt)) s
-      | _ => inl (ErrorAt i s0)
+    if a =? "s" then specifier String
+    else if a =? "c" then specifier Char
+    else if a =? "b" then specifier (number Binary)
+    else if a =? "o" then specifier (number Octal)
+    else if a =? "d" then specifier (number Decimal)
+    else if a =? "x" then specifier (number HexLower)
+    else if a =? "X" then specifier (number HexUpper)
+    else if a =? "N" then typ T_N
+    else if a =? "Z" then
+      match j, s with
+      | (Flags | Width), c :: s => if c =? "d"%char then parse_ Ini (fun fmt => k (Hole SDecimal o fmt)) s
+        else inl (ErrorAt i s0)
+      | _, _ => inl (ErrorAt i s0)
       end
-    | "-", Flags => flag Flags (update_option_justify o LeftJustify)
-    | "+", Flags => flag Flags (update_option_sign o true)
-    | " ", Flags => flag Flags (update_option_space o true)
-    | "#", Flags => flag Flags (update_option_prefix o true)
-    | "0", Flags => flag Flags (update_option_zero_pad o true)
-    | ("1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9"), (Flags | Width)
-    | "0", Width  => flag Width (update_option_width o (ascii_digit a))
-    | _, _ => inl (ErrorAt i s0)
-    end%char
-  end%string.
+    else if ((digit1to9 a && isFlagsOrWidth j) || ((a =? "0")%char && isWidth j))%bool then
+      flag Width (update_option_width o (ascii_digit a))
+    else
+    match j with
+    | Flags =>
+      if a =? "-" then flag Flags (update_option_justify o LeftJustify)
+      else if a =? "+" then flag Flags (update_option_sign o true)
+      else if a =? " " then flag Flags (update_option_space o true)
+      else if a =? "#" then flag Flags (update_option_prefix o true)
+      else if a =? "0" then flag Flags (update_option_zero_pad o true)
+      else inl (ErrorAt i s0)
+    | _ => inl (ErrorAt i s0)
+    end
+  end%char%string.
 
 Definition parse : string -> error + t := parse_ Ini id.
 

@@ -26,64 +26,56 @@ Definition base (ty : Format.number_enctype) : N :=
 
 Module Read.
 
-Local Open Scope char.
 Local Open Scope N.
+Local Open Scope char.
 
 Definition binary (c : ascii) : option N :=
-  match c with
-  | "0" => Some 0
-  | "1" => Some 1
-  | _ => None
-  end.
+  if c =? "0" then Some 0
+  else if c =? "1" then Some 1
+  else None.
 
 Definition octal (c : ascii) : option N :=
-  match c with
-  | "0" => Some 0
-  | "1" => Some 1
-  | "2" => Some 2
-  | "3" => Some 3
-  | "4" => Some 4
-  | "5" => Some 5
-  | "6" => Some 6
-  | "7" => Some 7
-  | _ => None
-  end.
+  if c =? "0" then Some 0
+  else if c =? "1" then Some 1
+  else if c =? "2" then Some 2
+  else if c =? "3" then Some 3
+  else if c =? "4" then Some 4
+  else if c =? "5" then Some 5
+  else if c =? "6" then Some 6
+  else if c =? "7" then Some 7
+  else None.
 
 Definition decimal (c : ascii) : option N :=
-  match c with
-  | "0" => Some 0
-  | "1" => Some 1
-  | "2" => Some 2
-  | "3" => Some 3
-  | "4" => Some 4
-  | "5" => Some 5
-  | "6" => Some 6
-  | "7" => Some 7
-  | "8" => Some 8
-  | "9" => Some 9
-  | _ => None
-  end.
+  if c =? "0" then Some 0
+  else if c =? "1" then Some 1
+  else if c =? "2" then Some 2
+  else if c =? "3" then Some 3
+  else if c =? "4" then Some 4
+  else if c =? "5" then Some 5
+  else if c =? "6" then Some 6
+  else if c =? "7" then Some 7
+  else if c =? "8" then Some 8
+  else if c =? "9" then Some 9
+  else None.
 
 Definition hex (c : ascii) : option N :=
-  match c with
-  | "0" => Some 0
-  | "1" => Some 1
-  | "2" => Some 2
-  | "3" => Some 3
-  | "4" => Some 4
-  | "5" => Some 5
-  | "6" => Some 6
-  | "7" => Some 7
-  | "8" => Some 8
-  | "9" => Some 9
-  | "a" | "A" => Some 10
-  | "b" | "B" => Some 11
-  | "c" | "C" => Some 12
-  | "d" | "D" => Some 13
-  | "e" | "E" => Some 14
-  | "f" | "F" => Some 15
-  | _ => None
-  end.
+  if c =? "0" then Some 0
+  else if c =? "1" then Some 1
+  else if c =? "2" then Some 2
+  else if c =? "3" then Some 3
+  else if c =? "4" then Some 4
+  else if c =? "5" then Some 5
+  else if c =? "6" then Some 6
+  else if c =? "7" then Some 7
+  else if c =? "8" then Some 8
+  else if c =? "9" then Some 9
+  else if ((c =? "a")%char || (c =? "A")%char)%bool then Some 10
+  else if ((c =? "b")%char || (c =? "B")%char)%bool then Some 11
+  else if ((c =? "c")%char || (c =? "C")%char)%bool then Some 12
+  else if ((c =? "d")%char || (c =? "D")%char)%bool then Some 13
+  else if ((c =? "e")%char || (c =? "E")%char)%bool then Some 14
+  else if ((c =? "f")%char || (c =? "F")%char)%bool then Some 15
+  else None.
 
 Definition digit (ty : Format.number_enctype) : ascii -> option N :=
   match ty with
@@ -176,10 +168,12 @@ Definition parse_this_char (c : ascii)
   end.
 
 Definition is_whitespace (c : ascii) : bool :=
-  match c with
-  | " " | "009" | "010" | "011" | "012" | "013" => true
-  | _ => false
-  end%char.
+  (c =? " ")%char ||
+  (c =? "009")%char ||
+  (c =? "010")%char ||
+  (c =? "011")%char ||
+  (c =? "012")%char ||
+  (c =? "013")%char.
 
 Definition parse_whitespace : parser R unit := fun k =>
   fix consume s0 :=
@@ -233,11 +227,17 @@ Definition parse_number
     | Format.T_Nat => N.to_nat
     | Format.T_N => id
     end in
+  let continue s := parse (base b) (Read.digit b) (fun n => k (from_N n)) s in
   match b, s with
-  | (Format.HexLower | Format.HexUpper), "0" :: ("x" | "X") :: s
-  | _, "+" :: s
-  | _, s
-    => parse (base b) (Read.digit b) (fun n => k (from_N n)) s
+  | (Format.HexLower | Format.HexUpper), (c1 :: c2 :: s2) as s =>
+    if ((c1 =? "0")%char && ((c2 =? "x")%char || (c2 =? "X")%char))%bool
+    then continue s2
+    else continue s
+  | _, c1 :: s1 =>
+    if (c1 =? "+")%char
+    then continue s1
+    else continue s
+  | _, _ => continue s
   end.
 
 Definition parse_signed
@@ -250,10 +250,14 @@ Definition parse_signed
     | Some w => parse_N' w
     end 10%N Read.decimal
   in
+  let parse_minus s := parse (fun n => k (Z.opp (Z.of_N n))) s in
+  let parse_plus s := parse (fun n => k (Z.of_N n)) s in
   match s with
-  | "-" :: s => parse (fun n => k (Z.opp (Z.of_N n))) s
-  | "+" :: s | s
-    => parse (fun n => k (Z.of_N n)) s
+  | c :: s' =>
+    if (c =? "-")%char then parse_minus s'
+    else if (c =? "+")%char then parse_plus s'
+    else parse_plus s
+  | _ => parse_plus s
   end.
 
 Definition parse_hole (ty : Format.type) (o : options)
@@ -273,8 +277,10 @@ Local Fixpoint parse_fmt (fmt : Format.t)
   : fmt_parser R fmt :=
   match fmt with
   | Format.Empty => fun k => k
-  | Format.Literal " " fmt => fun k => parse_whitespace (fun _ => parse_fmt fmt k)
-  | Format.Literal c fmt => fun k => parse_this_char c (fun _ => parse_fmt fmt k)
+  | Format.Literal c fmt => fun k =>
+    if (c =? " ")%char
+    then parse_whitespace (fun _ => parse_fmt fmt k)
+    else parse_this_char c (fun _ => parse_fmt fmt k)
   | Format.Hole ty o fmt => fun k => parse_hole ty o (fun x => parse_fmt fmt (k x))
   end.
 
