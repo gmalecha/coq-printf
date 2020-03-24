@@ -5,4 +5,5 @@
 Makefile.coq
 Makefile.coq.conf
 .coqdeps.d
+.Makefile.coq.d
 .envrc
