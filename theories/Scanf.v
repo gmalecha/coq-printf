@@ -6,6 +6,8 @@ Require Import Printf.Justify.
 Require Import Printf.Flags.
 Require Import Printf.Format.
 
+Require Export Printf.FormatNotations.
+
 Set Primitive Projections.
 
 Local Infix "::" := String : string_scope.
@@ -273,18 +275,15 @@ Definition parse_hole (ty : Format.type) (o : options)
   | Format.SDecimal => parse_signed o
   end.
 
-Local Fixpoint parse_fmt (fmt : Format.t)
+Fixpoint sscanf (fmt : Format.t)
   : fmt_parser R fmt :=
   match fmt with
   | Format.Empty => fun k => k
   | Format.Literal c fmt => fun k =>
     if (c =? " ")%char
-    then parse_whitespace (fun _ => parse_fmt fmt k)
-    else parse_this_char c (fun _ => parse_fmt fmt k)
-  | Format.Hole ty o fmt => fun k => parse_hole ty o (fun x => parse_fmt fmt (k x))
+    then parse_whitespace (fun _ => sscanf fmt k)
+    else parse_this_char c (fun _ => sscanf fmt k)
+  | Format.Hole ty o fmt => fun k => parse_hole ty o (fun x => sscanf fmt (k x))
   end.
-
-Definition sscanf (s : string) : for_good (Format.parse s) (fmt_parser R) :=
-  on_success parse_fmt.
 
 End Parser.

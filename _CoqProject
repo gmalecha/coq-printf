@@ -3,6 +3,8 @@
 theories/Flags.v
 theories/Digits.v
 theories/Format.v
+theories/FormatParser.v
+theories/FormatNotations.v
 theories/Justify.v
 theories/Printf.v
 theories/Scanf.v

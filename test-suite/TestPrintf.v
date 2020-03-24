@@ -2,6 +2,7 @@ Require Import Coq.Strings.Ascii.
 Require Import Coq.Strings.String.
 Require Import Coq.NArith.NArith.
 Require Import Coq.ZArith.ZArith.
+Require Import Printf.Digits.
 Require Import Printf.Printf.
 
 Local Open Scope string_scope.

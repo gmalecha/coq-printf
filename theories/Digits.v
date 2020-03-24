@@ -108,3 +108,18 @@ Definition string_of_digits (digit : N -> ascii) : digits -> string :=
 
 Definition string_of_N (base : N) (digit : N -> ascii) (n : N) : string :=
   string_of_digits digit (digits_of_N base n).
+
+Definition binary_string (n : N) :=
+  string_of_N 2 binary_ascii n.
+
+Definition hex_string (n : N) :=
+  string_of_N 16 hex_ascii n.
+
+Definition hex_string_upper (n : N) :=
+  string_of_N 16 hex_ascii_upper n.
+
+Definition octal_string (n : N) :=
+  string_of_N 8 octal_ascii n.
+
+Definition decimal_string (n : N) :=
+  string_of_N 10 decimal_ascii n.
