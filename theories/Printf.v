@@ -8,6 +8,8 @@ Require Import Printf.Flags.
 Require Import Printf.Format.
 Require Import Printf.Digits.
 
+Require Export Printf.FormatNotations.
+
 Set Primitive Projections.
 
 Local Infix "::" := String : string_scope.
@@ -43,21 +45,6 @@ Definition prefix_string (o : options) (prefix : string) (n : N) (s : string) : 
            else
              s
   end.
-
-Definition binary_string (n : N) :=
-  string_of_N 2 binary_ascii n.
-
-Definition hex_string (n : N) :=
-  string_of_N 16 hex_ascii n.
-
-Definition hex_string_upper (n : N) :=
-  string_of_N 16 hex_ascii_upper n.
-
-Definition octal_string (n : N) :=
-  string_of_N 8 octal_ascii n.
-
-Definition decimal_string (n : N) :=
-  string_of_N 10 decimal_ascii n.
 
 (* helper methods to format *)
 Definition format_s
@@ -131,7 +118,7 @@ Definition format (ty : Format.type)
   | Format.Char => fun o c => format_s o (c :: "")
   end.
 
-Local Fixpoint sprintf' (acc : string -> string) (fmt : Format.t)
+Fixpoint sprintf' (acc : string -> string) (fmt : Format.t)
   : Format.holes string fmt :=
   match fmt return Format.holes string fmt with
   | Format.Empty => acc ""%string
@@ -139,5 +126,5 @@ Local Fixpoint sprintf' (acc : string -> string) (fmt : Format.t)
   | Format.Hole ty o fmt => fun x => sprintf' (fun s => acc (format ty o x s)) fmt
   end.
 
-Definition sprintf (s : string) : for_good (Format.parse s) (Format.holes string) :=
-  on_success (sprintf' id).
+Definition sprintf (fmt : Format.t) : Format.holes string fmt :=
+  sprintf' id fmt.
