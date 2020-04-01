@@ -93,3 +93,21 @@ any number of consecutive whitespace characters.
 ## Resources
 
 Reference: http://www.cplusplus.com/reference/cstdio/printf
+
+## Project structure
+
+Under `theories/`.
+
+### External modules
+
+- `FormatNotations.v`: Notations for format strings
+- `Printf.v`
+- `Scanf.v`
+
+### Internal modules
+
+- `Digits.v`: Print numbers as strings
+- `Flags.v`: Definition of flags
+- `Justify.v`: Justification and padding
+- `Format.v`: Definition of format strings
+- `FormatParser.v`: Parse and print format string notation
